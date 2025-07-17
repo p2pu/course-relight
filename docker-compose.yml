@@ -1,0 +1,13 @@
+services:
+  course-light:
+    build: .
+    image: p2pu/course-light:local
+    ports:
+    - 8000:8000
+    volumes:
+    - .:/opt/app
+    environment:
+    - ADMIN_EMAIL=admin@localhost
+    - DEBUG=true
+    - SECRET_KEY=321
+    command: /opt/django-venv/bin/python manage.py runserver 0.0.0.0:8000
