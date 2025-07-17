@@ -1,14 +1,12 @@
 {% extends "courses/course_base.html" %}
-{% load l10n_tags %}
+
 {% load i18n %}
-{% load learn_tags %}
-{% load embed %}
 
 {% block tab-pane-content %}
   {% if course.status == 'archived' %}
     <div>
       <p class="text-warning">{% blocktrans %}This course is currently archived. Before you can make changes you need to change the course to published or draft.{% endblocktrans %}</p>
-      <form action="{% locale_url courses_change_status course_id=course.id %}" method="POST">
+      <form action="{% url "courses_change_status" course_id=course.id %}" method="POST">
         {% csrf_token %}
         <p><label for="id_status">{% trans "Course status" %}</label></p>
         {{ status_form.status }}
@@ -17,7 +15,7 @@
     </div>
   {% else %}
     <div>
-      <form action="{% locale_url courses_update_attribute course_id=course.id attribute='title' %}" method="POST">
+      <form action="{% url "courses_update_attribute" course_id=course.id attribute='title' %}" method="POST">
         {% csrf_token %}
         <p>
           <label for="id_title">{% trans "Course Title" %}</label>
@@ -28,7 +26,7 @@
     </div>
     <hr/>
     <div id="hashtag-edit">
-      <form action="{% locale_url courses_update_attribute course_id=course.id attribute='hashtag' %}" method="POST">
+      <form action="{% url 'courses_update_attribute' course_id=course.id attribute='hashtag' %}" method="POST">
         {% csrf_token %}
         <p>
           <label for="id_hashtag">{% trans "Hashtag" %}</label>
@@ -41,7 +39,7 @@
     <hr/>
  
     <div id="image-edit">
-      <form action="{% locale_url courses_image course_id=course.id %}" method="POST" enctype="multipart/form-data">
+      <form action="{% url 'courses_image' course_id=course.id %}" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <p>{{image_form.image}}</p>
         <p><button type="submit" >{% trans 'Upload new image' %}</button></p>
@@ -50,7 +48,7 @@
  
     <hr>
     <div>
-      <form action="{% locale_url courses_update_attribute course_id=course.id attribute='description' %}" method="POST">
+      <form action="{% url 'courses_update_attribute' course_id=course.id attribute='description' %}" method="POST">
         {% csrf_token %}
         <label for="id_description">{% trans "Description" %}</label>
         {{ update_form.description }}
@@ -59,7 +57,7 @@
     </div>
     <hr/>
     <div>
-      <form action="{% locale_url courses_change_status course_id=course.id %}" method="POST">
+      <form action="{% url 'courses_change_status' course_id=course.id %}" method="POST">
         {% csrf_token %}
         <p><label for="id_status">{% trans "Course status" %}</label></p>
         {{ status_form.status }}
@@ -78,7 +76,7 @@
  
       <div>
         <p>{%trans "Set dates"%}</p>
-        <form action="{% locale_url courses_change_term course_id=course.id term='fixed' %}" method="POST">
+        <form action="{% url 'courses_change_term' course_id=course.id term='fixed' %}" method="POST">
           {% csrf_token %}
           <p><label for="id_start_date">{% trans "Start date" %}</label>{{term_form.start_date}}</p>
           <p><label for="id_end_date">{% trans "End date" %}</label>{{term_form.end_date}}</p>
@@ -88,7 +86,7 @@
       {% if cohort.term == 'FIXED' %}
         <p>{%trans "or" %}</p>
         <div>
-          <form action="{% locale_url courses_change_term course_id=course.id term='rolling' %}" method="POST">
+          <form action="{% url 'courses_change_term' course_id=course.id term='rolling' %}" method="POST">
             {% csrf_token %}
             <p><input type="submit" value="{% trans "Switch to rolling term" %}"/></p>
           </form>
@@ -109,7 +107,7 @@
       {% endif %}
       
       <div id="signup-edit">
-        <form action="{% locale_url courses_change_signup course_id=course.id %}" method="POST">
+        <form action="{% url 'courses_change_signup' course_id=course.id %}" method="POST">
           {% csrf_token %}
           {{ signup_form.signup }}
           <button type="submit">{% trans "Save" %}</button>
@@ -118,7 +116,7 @@
     </div>
     <hr/>
     <div>
-      <form action="{% locale_url courses_update_tags course_id=course.id %}" method="POST">
+      <form action="{% url 'courses_update_tags' course_id=course.id %}" method="POST">
           {% csrf_token %}
           <label for="id_tags">{% trans "Tags" %}</label>
           {{ tags_form.tags }}
@@ -128,7 +126,7 @@
     <hr/>
     <div id="course-language">
       <div id="language-edit">
-        <form action="{% locale_url courses_update_attribute course_id=course.id attribute='language' %}" method="POST">
+        <form action="{% url 'courses_update_attribute' course_id=course.id attribute='language' %}" method="POST">
           {% csrf_token %}
           <label for="id_language">{% trans "Course languge" %}</label>
           {{ update_form.language }}
@@ -140,7 +138,7 @@
     <div id="course-metadata">
       <h3>{% trans 'Meta data' %}</h3>
       <p>{% blocktrans %}For more information about the supported meta data, see <a href="http://www.lrmi.net/the-specification">lrmi.net</a>{% endblocktrans %}</p>
-      <form action="{% locale_url courses_update_metadata course.id %}" method="POST">
+      <form action="{% url 'courses_update_metadata' course.id %}" method="POST">
         {% csrf_token %}
         <fieldset>
           <p>

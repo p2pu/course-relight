@@ -1,4 +1,4 @@
-from db import MetaTag
+from .db import MetaTag
 
 def save_tag(item_uri, key, value):
     if MetaTag.objects.filter(item_uri=item_uri, key=key).exists():

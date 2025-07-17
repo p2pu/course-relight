@@ -1,6 +1,6 @@
 import courses.models as course_model
-import content2.models as content_model
-from content2 import utils as content_utils
+import content.models as content_model
+from content import utils as content_utils
 
 def import_project(project, hashtag):
     course = {}

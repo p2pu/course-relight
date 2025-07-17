@@ -1,9 +1,9 @@
 {% extends "courses/course_base.html" %}
 {% load i18n %}
-{% load l10n_tags %}
-{% load embed %}
-{% load content2_tags %}
-{% load settings_tags %}
+
+{% comment %}{% load embed %}{% endcomment %}
+{% load content_tags %}
+{% comment %}{% load settings_tags %}{% endcomment %}
 
 {% block title %}{{course.title}} | {{content.title}}{% endblock %}
 {% block bodyclasses %}course-content{% endblock%}
@@ -11,29 +11,27 @@
 {% block breadcrumbs %}
   <li>
     <span class="divider">&rsaquo;</span>
-    <a href="{% locale_url courses_show course_id=course.id slug=course.slug%}">{{course.title}}</a>
+    <a href="{% url "courses_show" course_id=course.id slug=course.slug%}">{{course.title}}</a>
   </li>
   <li class="active"><span class="divider">&rsaquo;</span>{{ content.title }}</li>
 {% endblock %}
 
 {% block tab-pane-content %}
   <h2>{{ content.title }}</h2>
-  <div>{{content.content|convert_content|embed|safe}}</div>
+  {% comment %}<div>{{content.content|convert_content|embed|safe}}</div>{% endcomment %}
+  <div>{{content.content|convert_content|safe}}</div>
   {% if can_edit %}
     <p>
-      <a class="btn" href="{% locale_url courses_content_edit course_id=course.id content_id=content.id %}">
+      <a class="btn" href="{% url "courses_content_edit" course_id=course.id content_id=content.id %}">
         <i class="icon-edit"></i> {% trans "edit" %}
       </a>
     </p>
   {% endif %}
 
   <hr/>
-
-  <h2>{% trans "Comments" %}</h2>
-  <div id="disqus_thread">
-     <p class="alert warn">This site has been archived and discussions are not accessible anymore.</p>
-  </div>
   {% comment %}
+  <h2>{% trans "Comments" %}</h2>
+  <div id="disqus_thread"></div>
   <script type="text/javascript">
     var disqus_shortname = '{% settings_value "DISQUS_SHORTNAME" %}';
     {% if debug %}var disqus_developer = 1;{% endif %}

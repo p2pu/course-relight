@@ -1,14 +1,13 @@
 import base64
 import hashlib
 import hmac
-import simplejson
+import json
 import time
 import requests
 
 from django.conf import settings
-from django.contrib.sites.models import Site
  
-from l10n.urlresolvers import reverse
+from django.urls import reverse
 
 
 def get_disqus_sso(user):
@@ -19,10 +18,10 @@ def get_disqus_sso(user):
     )
     user_url = ''.join([
         'https://',
-        Site.objects.get_current().domain,
+        settings.DOMAIN,
         user_relative_url
     ])
-    data = simplejson.dumps({
+    data = json.dumps({
         'id': user.username,
         'username': user.username,
         'email': user.email,

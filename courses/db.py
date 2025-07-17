@@ -1,8 +1,6 @@
 from django.db import models
 
-from drumbeat.models import ModelBase
-
-class Course(ModelBase):
+class Course(models.Model):
 
     title = models.CharField(max_length=255)
     short_title = models.CharField(max_length=20)
@@ -14,23 +12,23 @@ class Course(ModelBase):
     archived = models.BooleanField(default=False)
     deleted = models.BooleanField(default=False)
     creator_uri = models.CharField(max_length=256)
-    based_on = models.ForeignKey('courses.Course', related_name='derived_courses', blank=True, null=True)
+    based_on = models.ForeignKey('courses.Course', models.SET_NULL, related_name='derived_courses', blank=True, null=True)
 
 
-class CourseContent(ModelBase):
+class CourseContent(models.Model):
 
-    course = models.ForeignKey(Course, related_name='content')
+    course = models.ForeignKey(Course, models.CASCADE, related_name='content')
     content_uri = models.CharField(max_length=256) 
     index = models.PositiveIntegerField()
 
 
-class CourseTags(ModelBase):
+class CourseTags(models.Model):
 
-    course = models.ForeignKey(Course, related_name='tags')
+    course = models.ForeignKey(Course, models.CASCADE, related_name='tags')
     tag = models.CharField(max_length=64)
 
 
-class Cohort(ModelBase):
+class Cohort(models.Model):
 
     OPEN = "OPEN"
     MODERATED = "MODERATED"
@@ -48,14 +46,14 @@ class Cohort(ModelBase):
         (FIXED, "Fixed"),
     )
 
-    course = models.ForeignKey(Course, related_name="cohort_set")
+    course = models.ForeignKey(Course, models.CASCADE, related_name="cohort_set")
     term = models.CharField(max_length=32, choices=TERM_CHOICES)
     start_date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
     signup = models.CharField(max_length=32, choices=SIGNUP_MODELS)
 
 
-class CohortSignup(ModelBase):
+class CohortSignup(models.Model):
 
     LEARNER = "LEARNER"
     ORGANIZER = "ORGANIZER"
@@ -64,16 +62,16 @@ class CohortSignup(ModelBase):
         (ORGANIZER, "Organizer"),
     )
 
-    cohort = models.ForeignKey(Cohort, related_name="signup_set")
+    cohort = models.ForeignKey(Cohort, models.CASCADE, related_name="signup_set")
     user_uri = models.CharField(max_length=256)
     role = models.CharField(max_length=10, choices=SIGNUP_ROLE_CHOICES)
     signup_date = models.DateTimeField(auto_now_add=True)
     leave_date = models.DateTimeField(blank=True, null=True)
 
 
-class CohortComment(ModelBase):
+class CohortComment(models.Model):
 
-    cohort = models.ForeignKey(Cohort, related_name="comment_set")
+    cohort = models.ForeignKey(Cohort, models.CASCADE, related_name="comment_set")
     comment_uri = models.CharField(max_length=256)
     reference_uri = models.CharField(max_length=256)
 

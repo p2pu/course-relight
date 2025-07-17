@@ -5,7 +5,7 @@ from users.models import create_profile
 from test_utils import TestCase
 
 from courses import models as course_model
-from content2 import models as content_model
+from content import models as content_model
 from mock import patch
 
 

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load i18n %}
-{% load l10n_tags %}
+
 
 {% block title %}{{content.title}}{% endblock %}
 {% block bodyclasses %}course-content{% endblock%}
@@ -12,13 +12,13 @@
 
 {% block breadcrumbs_title %}
   <h1 id="project-name">
-    <a href="{% locale_url courses_show course_id=course.id slug=course.slug%}">{{course.title}}</a></h1>
+    <a href="{% url courses_show course_id=course.id slug=course.slug%}">{{course.title}}</a></h1>
 {% endblock %}
 
 {% block breadcrumbs %}
   <li>
     <span class="divider">&rsaquo;</span>
-    <a href="{% locale_url courses_show course_id=course.id slug=course.slug%}">{{course.title}}</a>
+    <a href="{% url courses_show course_id=course.id slug=course.slug%}">{{course.title}}</a>
   </li>
 
 {% endblock %}
@@ -55,7 +55,7 @@
         e.preventDefault();
         $(this).tab('show');
         $("#content-preview-placeholder").load(
-            "{% locale_url courses_preview_content %}",
+            "{% url courses_preview_content %}",
             {
                 "content":$("#id_content").attr("value"),
                 "csrfmiddlewaretoken": "{{ csrf_token }}"

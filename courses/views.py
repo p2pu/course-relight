@@ -2,19 +2,19 @@ import logging
 import unicodecsv
 
 from django import http
-from django.shortcuts import render_to_response, get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 from django.template import RequestContext
 from django.utils.translation import ugettext as _
 from django.utils.translation import get_language
-from django.utils import simplejson as json
+import json
 from django.views.decorators.http import require_http_methods
 from django.conf import settings
 
-from l10n.urlresolvers import reverse
-from users.decorators import login_required
-from users.models import UserProfile
-from drumbeat import messages
+from django.urls import reverse
+from django.contrib.auth.decorators import login_required
+from users.models import User
+from django.contrib import messages
 
 from courses import models as course_model
 from courses.forms import CourseCreationForm
@@ -29,13 +29,11 @@ from courses.decorators import require_organizer
 from courses.badges_oembed import add_content_from_response
 from courses.badges_oembed import BadgeNotFoundException
 
-from content2 import models as content_model
-from content2.forms import ContentForm
-from content2 import utils
+from content import models as content_model
+from content.forms import ContentForm
 
-from learn import models as learn_model
+#from learn import models as learn_model
 from media import models as media_model
-from replies import models as comment_model
 
 from lrmi import models as lrmi_model
 from lrmi.forms import LrmiForm
@@ -86,15 +84,15 @@ def _populate_course_context( request, course_id, context ):
     elif cohort['signup'] == "OPEN":
         context['show_signup'] = True
 
-    try:
-        course_lists = learn_model.get_lists_for_course(reverse(
-            'courses_slug_redirect',
-            kwargs={'course_id': course_id}
-        ))
-        f = lambda l: l['name'] not in ['drafts', 'listed', 'archived']
-        context['lists'] = filter(f, course_lists)
-    except:
-        log.error("Could not get lists for course!")
+    #try:
+    #    course_lists = learn_model.get_lists_for_course(reverse(
+    #        'courses_slug_redirect',
+    #        kwargs={'course_id': course_id}
+    #    ))
+    #    f = lambda l: l['name'] not in ['drafts', 'listed', 'archived']
+    #    context['lists'] = filter(f, course_lists)
+    #except:
+    #    log.error("Could not get lists for course!")
 
     if 'based_on_uri' in course:
         course['based_on'] = course_model.get_course(course['based_on_uri'])
@@ -112,7 +110,7 @@ def create_course( request ):
     if request.method == "POST":
         form = CourseCreationForm(request.POST)
         if form.is_valid():
-            user = request.user.get_profile()
+            user = request.user
             user_uri = u"/uri/user/{0}".format(user.username)
             course = {
                 'title': form.cleaned_data.get('title'),
@@ -130,9 +128,7 @@ def create_course( request ):
         form = CourseCreationForm(initial={'language': get_language()})
 
     context = { 'form': form }
-    return render_to_response('courses/create_course.html', 
-        context, context_instance=RequestContext(request)
-    )
+    return render(request, 'courses/create_course.html', context)
 
 
 def import_project( request, project_slug ):
@@ -178,11 +174,7 @@ def show_course( request, course_id, slug=None ):
 
     context['about'] = content_model.get_content(course['about_uri'])
 
-    return render_to_response(
-        'courses/course.html',
-        context,
-        context_instance=RequestContext(request)
-    )
+    return render(request, 'courses/course.html', context)
 
 
 def course_learn_api_data( request, course_id ):
@@ -226,11 +218,7 @@ def course_add_badge( request, course_id ):
                 return http.HttpResponseRedirect(redirect_url)
 
     context['form'] = form
-    return render_to_response(
-        'courses/course_badges.html',
-        context,
-        context_instance=RequestContext(request)
-    )
+    return render(request, 'courses/course_badges.html', context)
 
 
 @login_required
@@ -243,10 +231,10 @@ def course_admin_content( request, course_id ):
     context = _populate_course_context(request, course_id, context)
     context['content_active'] = True
 
-    return render_to_response(
+    return render(
+        request,
         'courses/course_admin_content.html',
-        context,
-        context_instance=RequestContext(request)
+        context
     )
 
 
@@ -257,14 +245,14 @@ def course_discussion( request, course_id ):
     context = { }
     context = _populate_course_context(request, course_id, context)
     context['discussion_active'] = True
-    context['disqus_public_key'] = settings.DISQUS_PUBLIC_KEY
-    if request.user.is_authenticated():
-        context['disqus_sso'] = get_disqus_sso(request.user)
+    #context['disqus_public_key'] = settings.ISQUS_PUBLIC_KEY
+    #if request.user.is_authenticated:
+    #    context['disqus_sso'] = get_disqus_sso(request.user)
 
-    return render_to_response(
+    return render(
+        request,
         'courses/course_discussion.html',
-        context,
-        context_instance=RequestContext(request)
+        context
     )
 
 
@@ -281,10 +269,10 @@ def course_people( request, course_id ):
 
     context['people_active'] = True
 
-    return render_to_response(
+    return render(
+        request,
         'courses/course_people.html',
-        context,
-        context_instance=RequestContext(request)
+        context
     )
 
 
@@ -320,10 +308,10 @@ def course_settings( request, course_id ):
 
     context['settings_active'] = True
 
-    return render_to_response(
+    return render(
+        request,
         'courses/course_settings.html',
-        context,
-        context_instance=RequestContext(request)
+        context
     )
 
 
@@ -561,10 +549,10 @@ def course_announcement( request, course_id ):
         redirect_url = reverse('courses_show', kwargs={'course_id': course_id, 'slug': context['course']['slug']})
         return http.HttpResponseRedirect(redirect_url)
 
-    return render_to_response(
+    return render(
+        request,
         'courses/course_announcement.html',
-        context,
-        context_instance=RequestContext(request)
+        context
     )
 
 
@@ -586,7 +574,7 @@ def course_export_emails( request, course_id ):
 
     for user in cohort['users'].values():
         username = user['uri'].strip('/').split('/')[-1]
-        user['email'] = UserProfile.objects.get(username=username).email
+        user['email'] = User.objects.get(username=username).email
         writer.writerow([username, user['email'], user['signup_date']])
 
     return response
@@ -603,15 +591,15 @@ def show_content( request, course_id, content_id):
     content = content_model.get_content(content_uri)
     context['content'] = content
     context['content_active'] = True
-    context['disqus_public_key'] = settings.DISQUS_PUBLIC_KEY
-    if request.user.is_authenticated():
-        context['disqus_sso'] = get_disqus_sso(request.user)
+    #context['disqus_public_key'] = settings.DISQUS_PUBLIC_KEY
+    #if request.user.is_authenticated:
+    #    context['disqus_sso'] = get_disqus_sso(request.user)
 
     context['form'] = ContentForm(content)
-    return render_to_response(
+    return render(
+        request,
         'courses/content.html', 
-        context, 
-        context_instance=RequestContext(request)
+        context
     )
 
 
@@ -623,7 +611,7 @@ def create_content( request, course_id ):
     if request.method == "POST":
         form = ContentForm(request.POST)
         if form.is_valid():
-            user = request.user.get_profile()
+            user = request.user
             user_uri = u"/uri/user/{0}".format(user.username)
             content_data = {
                 'title': form.cleaned_data.get('title'),
@@ -647,8 +635,10 @@ def create_content( request, course_id ):
     if request.GET.get('next_url', None):
         context['next_url'] = request.GET.get('next_url', None)
 
-    return render_to_response('courses/create_content.html', 
-        context, context_instance=RequestContext(request)
+    return render(
+        request,
+        'courses/create_content.html', 
+        context
     )
 
 
@@ -666,7 +656,7 @@ def edit_content( request, course_id, content_id ):
                 'title': form.cleaned_data.get('title'),
                 'content': form.cleaned_data.get('content'),
             }
-            user = request.user.get_profile()
+            user = request.user
             user_uri = u"/uri/user/{0}".format(user.username)
             content = content_model.update_content(
                 content['uri'], content_data['title'], 
@@ -689,8 +679,10 @@ def edit_content( request, course_id, content_id ):
     context = _populate_course_context(request, course_id, context)
     if request.GET.get('next_url', None):
         context['next_url'] = request.GET.get('next_url', None)
-    return render_to_response('courses/edit_content.html', 
-        context, context_instance=RequestContext(request)
+    return render(
+        request,
+        'courses/edit_content.html', 
+        context
     )
 
 
@@ -698,7 +690,7 @@ def edit_content( request, course_id, content_id ):
 @require_http_methods(['POST'])
 def preview_content( request ):
     content = request.POST.get('content')
-    from content2 import utils
+    from content import utils
     content = utils.clean_user_content(content)
     content = render_to_string("courses/preview_content_snip.html", 
         {'content':content })
@@ -753,6 +745,8 @@ def delete_spam(request, course_id):
 
     context = { }
     context = _populate_course_context(request, course_id, context)
-    return render_to_response('courses/course_delete_confirmation.html', 
-        context, context_instance=RequestContext(request)
+    return render(
+        request,
+        'courses/course_delete_confirmation.html', 
+        context
     )

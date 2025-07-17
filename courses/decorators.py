@@ -1,7 +1,6 @@
 from django import http
 from django.utils.translation import ugettext as _
 
-from drumbeat import messages
 from courses import models as course_model
 
 def require_organizer( function ):

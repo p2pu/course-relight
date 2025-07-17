@@ -1,20 +1,19 @@
-import simplejson as json
+import json
 import datetime
 
 from django.utils.translation import ugettext as _
-from django.contrib.sites.models import Site
+from django.conf import settings
 
-from l10n.urlresolvers import reverse
+from django.urls import reverse
 
-from drumbeat.utils import slugify
+from django.utils.text import slugify
 from courses import db
-from content2 import models as content_model
-from replies import models as comment_model
-from learn import models as learn_model
+from content import models as content_model
+#from learn import models as learn_model
 from media import models as media_model
-from notifications import models as notification_model
+#from notifications import models as notification_model
 
-from users.models import UserProfile #NOTE: don't like this dep
+from users.models import User #NOTE: don't like this dep
 
 import logging
 log = logging.getLogger(__name__)
@@ -151,9 +150,9 @@ def create_course(title, hashtag, description, language, organizer_uri, based_on
     create_course_cohort("/uri/course/{0}".format(course_db.id), organizer_uri)
     course = get_course("/uri/course/{0}".format(course_db.id))
 
-    learn_api_data = get_course_learn_api_data(course['uri'])
-    learn_model.add_course_listing(**learn_api_data)
-    learn_model.add_course_to_list(learn_api_data['course_url'], "drafts")
+    #learn_api_data = get_course_learn_api_data(course['uri'])
+    #learn_model.add_course_listing(**learn_api_data)
+    #learn_model.add_course_to_list(learn_api_data['course_url'], "drafts")
 
     # TODO notify admins
     return course
@@ -197,18 +196,18 @@ def update_course(course_uri, title=None, hashtag=None, description=None, langua
         course_db.image_uri = image_uri
 
     course_db.save()
-    update_course_learn_api(course_uri)
+    #update_course_learn_api(course_uri)
 
     return get_course(course_uri)
 
 
-def update_course_learn_api(course_uri):
-    """ send updated course info to the learn API to update course listing """
-    course_db = _get_course_db(course_uri)
-    try:
-        learn_model.update_course_listing(**get_course_learn_api_data(course_uri))
-    except:
-        log.error("Could not update learn index information!")
+#   def update_course_learn_api(course_uri):
+#       """ send updated course info to the learn API to update course listing """
+#       course_db = _get_course_db(course_uri)
+#       try:
+#           learn_model.update_course_listing(**get_course_learn_api_data(course_uri))
+#       except:
+#           log.error("Could not update learn index information!")
 
 
 def get_course_learn_api_data(course_uri):
@@ -253,15 +252,15 @@ def publish_course(course_uri):
         'courses_slug_redirect',
         kwargs={'course_id': course["id"]}
     )
-    try:
-        learn_model.remove_course_from_list(course_url, "drafts")
-    except:
-        try: 
-            learn_model.remove_course_from_list(course_url, "archived")
-        except:
-            pass
-
-    learn_model.add_course_to_list(course_url, "listed")
+    #try:
+    #    learn_model.remove_course_from_list(course_url, "drafts")
+    #except:
+    #    try: 
+    #        learn_model.remove_course_from_list(course_url, "archived")
+    #    except:
+    #        pass
+    #
+    #learn_model.add_course_to_list(course_url, "listed")
 
     # TODO: Notify interested people in new course
     return course
@@ -282,15 +281,15 @@ def archive_course(course_uri):
         kwargs={'course_id': course["id"]}
     )
 
-    try:
-        learn_model.remove_course_from_list(course_url, "listed")
-    except:
-        try: 
-            learn_model.remove_course_from_list(course_url, "drafts")
-        except:
-            log.error('Course not in any lists')
-
-    learn_model.add_course_to_list(course_url, "archived")
+    #try:
+    #    learn_model.remove_course_from_list(course_url, "listed")
+    #except:
+    #    try: 
+    #        learn_model.remove_course_from_list(course_url, "drafts")
+    #    except:
+    #        log.error('Course not in any lists')
+    #
+    #learn_model.add_course_to_list(course_url, "archived")
     return course
 
 
@@ -310,15 +309,15 @@ def unpublish_course(course_uri):
         kwargs={'course_id': course["id"]}
     )
 
-    try:
-        learn_model.remove_course_from_list(course_url, 'listed')
-    except:
-        try:
-            learn_model.remove_course_from_list(course_url, 'archived')
-        except:
-            log.error('Course not in any lists')
-
-    learn_model.add_course_to_list(course_url, "drafts")
+    #try:
+    #    learn_model.remove_course_from_list(course_url, 'listed')
+    #except:
+    #    try:
+    #        learn_model.remove_course_from_list(course_url, 'archived')
+    #    except:
+    #        log.error('Course not in any lists')
+    #
+    #learn_model.add_course_to_list(course_url, "drafts")
 
     return course
 
@@ -332,17 +331,17 @@ def delete_spam_course(course_uri):
     course_db.save()
 
     # remove the course listing
-    course_url = reverse(
-        'courses_slug_redirect',
-        kwargs={'course_id': course_db.id}
-    )
-    try:
-        lists = learn_model.get_lists_for_course(course_url)
-        for course_list in lists:
-            learn_model.remove_course_from_list(course_url, course_list['name'])
-        learn_model.remove_course_listing(course_url)
-    except:
-        pass
+    #course_url = reverse(
+    #    'courses_slug_redirect',
+    #    kwargs={'course_id': course_db.id}
+    #)
+    #try:
+    #    lists = learn_model.get_lists_for_course(course_url)
+    #    for course_list in lists:
+    #        learn_model.remove_course_from_list(course_url, course_list['name'])
+    #    learn_model.remove_course_listing(course_url)
+    #except:
+    #    pass
     
 
 def get_course_content(course_uri):
@@ -426,7 +425,7 @@ def add_course_tags(course_uri, tags):
         if not db.CourseTags.objects.filter(course=course_db, tag=tag).exists():
             tag_db = db.CourseTags(course=course_db, tag=tag)
             tag_db.save()
-    update_course_learn_api(course_uri)
+    #update_course_learn_api(course_uri)
 
 
 def remove_course_tags(course_uri, tags):
@@ -434,7 +433,7 @@ def remove_course_tags(course_uri, tags):
 
     for tag_db in db.CourseTags.objects.filter(course=course_db, tag__in=tags):
         tag_db.delete()
-    update_course_learn_api(course_uri)
+    #update_course_learn_api(course_uri)
 
 
 def create_course_cohort(course_uri, organizer_uri):
@@ -553,7 +552,7 @@ def add_user_to_cohort(cohort_uri, user_uri, role, notify_organizers=False):
     cohort_db = _get_cohort_db(cohort_uri)
 
     username = user_uri.strip('/').split('/')[-1]
-    if not UserProfile.objects.filter(username=username).exists():
+    if not User.objects.filter(username=username).exists():
         raise ResourceNotFoundException(u'User {0} does not exist'.format(user_uri))
 
     if db.CohortSignup.objects.filter(cohort=cohort_db, user_uri=user_uri, leave_date__isnull=True).exists():
@@ -569,18 +568,18 @@ def add_user_to_cohort(cohort_uri, user_uri, role, notify_organizers=False):
     if notify_organizers:
         cohort = get_cohort(cohort_uri)
         course = get_course(cohort['course_uri'])
-        organizers = UserProfile.objects.filter(username__in=cohort['organizers'])
+        organizers = User.objects.filter(username__in=cohort['organizers'])
         context = {
             'course': course,
             'new_user': username,
-            'domain': Site.objects.get_current().domain,
+            'domain': settings.domain,
         }
         subject_template = 'courses/emails/course_join_subject.txt'
         body_template = 'courses/emails/course_join.txt'
-        notification_model.send_notifications_i18n(
-            organizers, subject_template, body_template, context,
-            notification_category='course-signup.course-{0}'.format(course['id'])
-        )
+        #notification_model.send_notifications_i18n(
+        #    organizers, subject_template, body_template, context,
+        #    notification_category='course-signup.course-{0}'.format(course['id'])
+        #)
     
     signup = {
         "cohort_uri": cohort_uri,
@@ -615,47 +614,15 @@ def remove_user_from_cohort(cohort_uri, user_uri):
 def send_course_announcement(course_uri, announcement_text):
     course = get_course(course_uri)
     cohort = get_course_cohort(course_uri)
-    users = UserProfile.objects.filter(username__in=cohort['users'].keys())
-    notification_model.send_notifications_i18n(
-        users,
-        'courses/emails/course_announcement_subject.txt',
-        'courses/emails/course_announcement.txt',
-        { 
-            'course': course,
-            'announcement_text': announcement_text,
-            'domain': Site.objects.get_current().domain
-        },
-        notification_category='course-announcement.course-{0}'.format(course['id'])
-    )
-
-
-def add_comment_to_cohort(comment_uri, cohort_uri, reference_uri):
-    #NOTE this is not being used = not tested ~ not working
-    raise Exception
-    #NOTE maybe create comment and update comment reference to simplify use?
-    cohort_db = _get_cohort_db(cohort_uri)
-    cohort_comment_db = db.CohortComment(
-        cohort=cohort_db,
-        comment_uri=comment_uri,
-        reference_uri=reference_uri
-    )
-
-    cohort_comment_db.save()
-
-    #TODO update the reference for the comment to point to this cohort comment
-    #NOTE maybe eliminate this psuedo resource by using a combined URI cohort+ref
-
-    return comment_model.get_comment(comment_uri)
-
-
-def get_cohort_comments(cohort_uri, reference_uri):
-    #NOTE this is not being used = not tested ~ not working
-    raise Exception
-    cohort_db = _get_cohort_db(cohort_uri)
-    cohort_comments = []
-    for cohort_comment in cohort_db.comment_set.filter(reference_uri=reference_uri):
-        #NOTE: possible performance problem!!
-        comment = comment_model.get_comment(cohort_comment.comment_uri)
-        cohort_comments += [comment]
-        #yield comment
-    return cohort_comments
+    users = User.objects.filter(username__in=cohort['users'].keys())
+    #notification_model.send_notifications_i18n(
+    #    users,
+    #    'courses/emails/course_announcement_subject.txt',
+    #    'courses/emails/course_announcement.txt',
+    #    { 
+    #        'course': course,
+    #        'announcement_text': announcement_text,
+    #        'domain': settings.domain
+    #    },
+    #    notification_category='course-announcement.course-{0}'.format(course['id'])
+    #)

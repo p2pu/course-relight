@@ -1,7 +1,7 @@
 import requests
 from django.conf import settings
 
-from content2 import models as content_model
+from content import models as content_model
 from courses import models as course_model
 
 
