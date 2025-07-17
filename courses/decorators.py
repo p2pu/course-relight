@@ -1,5 +1,5 @@
 from django import http
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 from courses import models as course_model
 

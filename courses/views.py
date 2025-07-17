@@ -5,7 +5,7 @@ from django import http
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 from django.template import RequestContext
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 from django.utils.translation import get_language
 import json
 from django.views.decorators.http import require_http_methods

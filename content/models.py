@@ -2,7 +2,7 @@ import json
 
 from content import db
 from django.utils.text import slugify
-from django.utils.translation import ugettext as _
+from django.utils.translation import gettext as _
 
 import logging
 log = logging.getLogger(__name__)
