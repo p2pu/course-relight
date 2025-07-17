@@ -39,7 +39,6 @@ from lrmi import models as lrmi_model
 from lrmi.forms import LrmiForm
 from lrmi.forms import EducationalAlignmentForm
 
-from disqus.utils import get_disqus_sso
 
 log = logging.getLogger(__name__)
 
@@ -245,9 +244,6 @@ def course_discussion( request, course_id ):
     context = { }
     context = _populate_course_context(request, course_id, context)
     context['discussion_active'] = True
-    #context['disqus_public_key'] = settings.ISQUS_PUBLIC_KEY
-    #if request.user.is_authenticated:
-    #    context['disqus_sso'] = get_disqus_sso(request.user)
 
     return render(
         request,
@@ -591,9 +587,6 @@ def show_content( request, course_id, content_id):
     content = content_model.get_content(content_uri)
     context['content'] = content
     context['content_active'] = True
-    #context['disqus_public_key'] = settings.DISQUS_PUBLIC_KEY
-    #if request.user.is_authenticated:
-    #    context['disqus_sso'] = get_disqus_sso(request.user)
 
     context['form'] = ContentForm(content)
     return render(
