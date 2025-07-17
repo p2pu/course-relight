@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 
 {% load i18n %}
+{% load static %}
 
 {% block title %}{{course.title}}{% endblock %}
 {% block bodyclasses %}course-landing{% endblock%}
 
 {% block css %}
-  <link rel="stylesheet" href="{{ STATIC_URL }}css/course.css">
+  <link rel="stylesheet" href="{% static 'css/course.css' %}">
 {% endblock %}
 
 {% block links %}
